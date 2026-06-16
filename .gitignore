@@ -1,0 +1,16 @@
+kaggle.json
+access_token
+.env
+*.zip
+*.tar.gz
+*.log
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+data/
+replays/
+outputs/
+logs/
+dist/
+

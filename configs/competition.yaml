@@ -1,0 +1,27 @@
+competition_slug: orbit-wars
+competition_url: https://www.kaggle.com/competitions/orbit-wars
+environment_name: orbit_wars
+submission_entry: main.py
+agent_function: agent(obs)
+action_format: "[[from_planet_id, direction_angle, num_ships], ...]"
+metric: multi_agent_leaderboard_rating
+higher_is_better: true
+episode_steps: 500
+act_timeout_seconds: 1
+board_size: 100.0
+sun_radius: 10.0
+ship_speed_max: 6.0
+comet_speed: 4.0
+official_files:
+  - README.md
+  - agents.md
+  - main.py
+official_download_dir: data/official
+local_env_available: not_verified
+kaggle_cli_status: success
+submissions_before_first_baseline: "No submissions found"
+first_baseline:
+  source: official_starter_main_py
+  strategy: nearest_planet_sniper
+  purpose: connectivity_and_submission_contract
+
