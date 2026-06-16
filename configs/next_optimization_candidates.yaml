@@ -1,0 +1,340 @@
+competition: orbit-wars
+audit_date: '2026-06-16'
+status: proposed_after_open_source_and_discussion_audit
+constraints:
+  kaggle_submit: false
+  do_not_commit:
+  - data/
+  - external/
+  - outputs/
+  - replays/
+  - dist/
+  - '*.zip'
+  - '*.tar.gz'
+candidates:
+- idea_id: fix_observed_turns_confidence
+  title: Fix observed_turns and behavior-specific confidence accounting
+  source_evidence:
+  - reports/PROFILER_COVERAGE_REVIEW.md
+  - src/orbitwars_agent/opponent_profiler.py
+  target_strategy_family:
+  - all_profiled_families
+  what_to_change:
+  - Count one observation per enemy per game step instead of one per owned planet.
+  - Keep planet-count exposure as a separate feature.
+  - Split confidence into behavior-specific confidence values where possible.
+  expected_gain: Cleaner trigger timing and fewer turtle/rush misclassifications.
+  implementation_cost: low
+  risk: Existing tests assume only broad confidence behavior; local thresholds may need retuning.
+  validation_plan:
+  - Run unit tests.
+  - Compare profile traces before/after on P0 public agent pool.
+  - Check first trigger turn for neutral_rusher, enemy_rusher, turtle, comet_greedy.
+  first_files_to_modify:
+  - src/orbitwars_agent/opponent_profiler.py
+  - tests/test_opponent_profiler.py
+  fallback: Keep old observed_turns as exposure_turns while using game_turns for confidence.
+  priority: P0
+- idea_id: profile_trace_logging
+  title: Add profile trace logging for real match recognition time series
+  source_evidence:
+  - reports/PROFILER_COVERAGE_REVIEW.md
+  - reports/PUBLIC_AGENT_LOADING.md
+  - reports/GOLD_REPLAY_STRATEGY_ANALYSIS.md
+  target_strategy_family:
+  - all_profiled_families
+  what_to_change:
+  - Add optional profiler trace output to local match scripts.
+  - Record per-turn profile scores, confidence, triggers, and chosen modifiers.
+  - Store generated traces under outputs/profile_traces.
+  expected_gain: Makes thresholds auditable before changing behavior.
+  implementation_cost: low
+  risk: Trace logging can clutter output or slow local tournaments if always enabled.
+  validation_plan:
+  - Run one match per P0 public agent with trace enabled.
+  - Confirm output is ignored by git.
+  - Summarize first trigger turn and false-positive candidates.
+  first_files_to_modify:
+  - scripts/run_match.py
+  - src/orbitwars_agent/adaptive_agent.py
+  - src/orbitwars_agent/opponent_profiler.py
+  fallback: Add a separate replay/profile analysis script instead of runtime logging.
+  priority: P0
+- idea_id: recently_captured_recapture_logic
+  title: Detect and exploit recently captured enemy planets
+  source_evidence:
+  - reports/DISCUSSION_REVIEW.md
+  - reports/GOLD_REPLAY_STRATEGY_ANALYSIS.md
+  - reports/MACRO_STRATEGY_TAXONOMY.md
+  target_strategy_family:
+  - defense_reinforcement_agent
+  - production_greedy_expander
+  - hybrid_layered_agent
+  what_to_change:
+  - Track ownership transitions and low-garrison newly captured planets.
+  - Add recapture target bonus when enemy just spent ships to capture.
+  - Separate recapture attacks from generic enemy_rusher classification.
+  expected_gain: Better punishment of overcommit and public meta recapture windows.
+  implementation_cost: medium
+  risk: Can over-focus recaptures and miss higher-value expansion if transition tracking is noisy.
+  validation_plan:
+  - Unit-test transition detection.
+  - Run gauntlet against Producer-style and reinforcement agents.
+  - Inspect replays for one-turn-late or overpaid recapture attempts.
+  first_files_to_modify:
+  - src/orbitwars_agent/world_model.py
+  - src/orbitwars_agent/opponent_profiler.py
+  - src/orbitwars_agent/adaptive_agent.py
+  fallback: Add only a target-score bonus for enemy planets with low ships and recent incoming enemy fleet.
+  priority: P0
+- idea_id: comet_spawn_preposition
+  title: Add comet spawn timing and preposition logic
+  source_evidence:
+  - reports/OFFICIAL_RULES_REVIEW.md
+  - reports/KAGGLE_NOTEBOOK_REVIEW.md
+  - reports/PROFILER_COVERAGE_REVIEW.md
+  target_strategy_family:
+  - comet_greedy_agent
+  - hybrid_layered_agent
+  what_to_change:
+  - Track expected comet windows around 50, 150, 250, 350, and 450.
+  - Identify sources that can reach high-value comet planets at spawn or early lifetime.
+  - Separate comet prepositioning from after-the-fact comet chasing.
+  expected_gain: More timely comet contests and more stable comet_greedy detection.
+  implementation_cost: medium
+  risk: Overpaying for short-lifetime or low-production comet planets.
+  validation_plan:
+  - Add deterministic unit states around comet windows.
+  - Trace public agents with comet logic.
+  - Compare local match deltas against sigmaborov_starter and layered agents.
+  first_files_to_modify:
+  - src/orbitwars_agent/physics.py
+  - src/orbitwars_agent/world_model.py
+  - src/orbitwars_agent/adaptive_agent.py
+  - src/orbitwars_agent/opponent_profiler.py
+  fallback: Only increase target score for already visible high-production comet planets with enough life remaining.
+  priority: P1
+- idea_id: base_agent_scoring_injection
+  title: Inject adaptive modifiers into base-agent scoring instead of post-hoc supplement moves
+  source_evidence:
+  - reports/COUNTER_POLICY_COVERAGE_REVIEW.md
+  - reports/PUBLIC_AGENT_LOADING.md
+  target_strategy_family:
+  - hybrid_layered_agent
+  - world_model_forecaster
+  - production_greedy_expander
+  what_to_change:
+  - Expose selected adaptive modifiers to the base agent mission scoring layer.
+  - Avoid duplicate post-hoc moves that compete with base commitments.
+  - Keep a fallback wrapper path for safety.
+  expected_gain: Better coordination with the strong Pilkwang base mission queue.
+  implementation_cost: high
+  risk: Higher blast radius because public base code is large and mission ordering is delicate.
+  validation_plan:
+  - Start with one modifier, such as target enemy bias or recapture bonus.
+  - Run unit tests and P0 gauntlet after every small change.
+  - Compare action counts and invalid-action rate.
+  first_files_to_modify:
+  - agents/base_agent.py
+  - src/orbitwars_agent/adaptive_agent.py
+  - src/orbitwars_agent/strategy_modifiers.py
+  fallback: Keep wrapper-level supplement and add stricter duplicate-target suppression.
+  priority: P1
+- idea_id: four_player_threat_prioritization
+  title: Add 4-player threat prioritization and enemy-specific modifiers
+  source_evidence:
+  - reports/OFFICIAL_RULES_REVIEW.md
+  - reports/LEADERBOARD_GOLD_REPLAY_AUDIT.md
+  - reports/COUNTER_POLICY_COVERAGE_REVIEW.md
+  target_strategy_family:
+  - distance_prioritized_rusher
+  - weakest_targeter
+  - hybrid_layered_agent
+  what_to_change:
+  - Rank enemies by proximity, production, fleet pressure, current score, and attacks against us.
+  - Apply reserve and target bias per enemy rather than only global max.
+  - Avoid helping a current leader by overattacking the weakest player.
+  expected_gain: Better 4P behavior and fewer wrong global reactions.
+  implementation_cost: medium
+  risk: Threat scores may be noisy and create oscillating target priorities.
+  validation_plan:
+  - Run 4P local matches against mixed public pool.
+  - Inspect target distribution by enemy id.
+  - Compare survival and rank, not just raw score.
+  first_files_to_modify:
+  - src/orbitwars_agent/opponent_profiler.py
+  - src/orbitwars_agent/counter_policy.py
+  - src/orbitwars_agent/adaptive_agent.py
+  fallback: Add a simple "attacked_us_recently" enemy bias before full threat scoring.
+  priority: P1
+- idea_id: anti_big_stack_reinforcement_source_counter
+  title: Add anti-big-stack reinforcement, evacuation, and source counterattack
+  source_evidence:
+  - reports/MACRO_STRATEGY_TAXONOMY.md
+  - reports/PUBLIC_AGENT_LOADING.md
+  - reports/GOLD_REPLAY_STRATEGY_ANALYSIS.md
+  target_strategy_family:
+  - big_stack_hammer
+  - multi_source_gangup_agent
+  - hybrid_layered_agent
+  what_to_change:
+  - Detect large incoming or converging enemy fleets earlier.
+  - Reinforce only if cost-effective; otherwise evacuate or counterattack source planets.
+  - Track depleted sources after big sends.
+  expected_gain: Better against vkhydras-style hammer and layered all-in attacks.
+  implementation_cost: medium
+  risk: Bad evacuation can surrender valuable planets too early.
+  validation_plan:
+  - Build synthetic big-stack states.
+  - Run targeted matches against vkhydras_peak_heuristic.
+  - Replay-inspect defended versus evacuated targets.
+  first_files_to_modify:
+  - src/orbitwars_agent/world_model.py
+  - src/orbitwars_agent/opponent_profiler.py
+  - src/orbitwars_agent/adaptive_agent.py
+  fallback: Increase counterattack bonus only when source planet is visible and depleted.
+  priority: P1
+- idea_id: center_high_production_control
+  title: Activate center and high-production planet control
+  source_evidence:
+  - reports/MACRO_STRATEGY_TAXONOMY.md
+  - reports/PROFILER_COVERAGE_REVIEW.md
+  - reports/GOLD_REPLAY_STRATEGY_ANALYSIS.md
+  target_strategy_family:
+  - production_greedy_expander
+  - center_control_agent
+  - hybrid_layered_agent
+  what_to_change:
+  - Consume `production_greedy` and `center_greedy` in counter policy.
+  - Add denial bonus for high-production planets likely to become enemy-owned.
+  - Set `center_weight_mult` only when center planets are production-positive.
+  expected_gain: Better response to Producer-style ROI and high-production opening patterns.
+  implementation_cost: low
+  risk: Center control can become a trap if low-production center planets are overvalued.
+  validation_plan:
+  - Run public pool matches with trace of high-production targets.
+  - Compare against Producer family once wrapper is completed.
+  - Check no regression versus nearest/starter bots.
+  first_files_to_modify:
+  - src/orbitwars_agent/counter_policy.py
+  - src/orbitwars_agent/adaptive_agent.py
+  - tests/test_counter_policy.py
+  fallback: Start with production-only branch; leave center disabled until replay evidence is stronger.
+  priority: P0
+- idea_id: profile_specific_reserve_floor
+  title: Use profile-specific reserve floors instead of one global max reaction
+  source_evidence:
+  - reports/COUNTER_POLICY_COVERAGE_REVIEW.md
+  - reports/PROFILER_COVERAGE_REVIEW.md
+  target_strategy_family:
+  - enemy_rusher
+  - big_stack_hammer
+  - weakest_targeter
+  - hybrid_layered_agent
+  what_to_change:
+  - Tie reserve changes to enemy proximity and targetable own planets.
+  - Avoid raising reserve everywhere because one distant enemy has a high score.
+  - Keep global minimum only for actual incoming threats.
+  expected_gain: More ships remain available for expansion/attack in 4P while preserving defense.
+  implementation_cost: medium
+  risk: More complex reserve logic can miss cross-map threats if proximity is wrong.
+  validation_plan:
+  - Compare sent ships and unused reserves in 4P public pool.
+  - Unit-test near versus distant rusher states.
+  - Inspect match traces for reserve starvation.
+  first_files_to_modify:
+  - src/orbitwars_agent/counter_policy.py
+  - src/orbitwars_agent/adaptive_agent.py
+  - src/orbitwars_agent/strategy_modifiers.py
+  fallback: Add per-enemy target bias first and leave reserve global.
+  priority: P2
+- idea_id: opponent_family_benchmark_pool
+  title: Build repeatable opponent family benchmark pool
+  source_evidence:
+  - reports/PUBLIC_AGENT_LOADING.md
+  - configs/public_agent_pool.yaml
+  - configs/strategy_taxonomy.yaml
+  target_strategy_family:
+  - all_public_families
+  what_to_change:
+  - Define small family-balanced benchmark groups from loaded public agents.
+  - Add scripts/configs for fixed seeds and bidirectional/4P schedules.
+  - Summarize win/loss/rank locally without calling official submit.
+  expected_gain: Makes every adaptive change measurable against public strategy families.
+  implementation_cost: low
+  risk: Local pool can overfit public agents and diverge from official matchmaking.
+  validation_plan:
+  - Run smoke-size benchmark on P0 agents.
+  - Save outputs under ignored outputs/benchmarks.
+  - Add a report template for local-only results.
+  first_files_to_modify:
+  - scripts/run_match.py
+  - scripts/run_public_pool.py
+  - configs/public_agent_pool.yaml
+  fallback: Use existing run_match loop in PowerShell and summarize manually.
+  priority: P0
+- idea_id: weak_bot_starter_like_recognition
+  title: Implement weak_bot and starter-like recognition
+  source_evidence:
+  - reports/PROFILER_COVERAGE_REVIEW.md
+  - reports/MACRO_STRATEGY_TAXONOMY.md
+  target_strategy_family:
+  - nearest_expander
+  - weak_bot
+  what_to_change:
+  - Score low-value nearest expansion, no defense, no multi-source, and poor production choices.
+  - Add a counter branch that expands greedily and avoids unnecessary reserves.
+  - Keep this separate from turtle classification.
+  expected_gain: Faster wins against weaker public/starter-like agents without harming strong-agent defense.
+  implementation_cost: low
+  risk: Mislabeling slow strong agents as weak can reduce defense too much.
+  validation_plan:
+  - Run against official starter and sigmaborov_starter.
+  - Require low false positives against Producer and Pilkwang-style agents.
+  - Inspect first 80 turns of profile trace.
+  first_files_to_modify:
+  - src/orbitwars_agent/opponent_profiler.py
+  - src/orbitwars_agent/counter_policy.py
+  - tests/test_opponent_profiler.py
+  fallback: Use only as a non-defensive expansion bonus, not as an attack trigger.
+  priority: P2
+- idea_id: high_rank_replay_feature_extraction
+  title: Continue high-rank replay feature extraction when visible replays are available
+  source_evidence:
+  - reports/LEADERBOARD_GOLD_REPLAY_AUDIT.md
+  - reports/GOLD_REPLAY_STRATEGY_ANALYSIS.md
+  - reports/DISCUSSION_REVIEW.md
+  target_strategy_family:
+  - hybrid_layered_agent
+  - production_greedy_expander
+  - defense_reinforcement_agent
+  what_to_change:
+  - Keep gold-team claims disabled until final medals exist and replay/team mapping is visible.
+  - Expand current high-rank replay extractor across official daily episode datasets.
+  - Produce aggregate features only, not private-code inference.
+  expected_gain: Better empirical priors for opening commit, first attack, defense, and comet windows.
+  implementation_cost: medium
+  risk: Large replay datasets are 20GB/day; careless downloads can waste disk/time.
+  validation_plan:
+  - Sample a small fixed number of current top-rated episodes.
+  - Store raw features under ignored outputs/replay_features.
+  - Compare aggregated behavior to public agent pool traces.
+  first_files_to_modify:
+  - scripts/analyze_replay_features.py
+  - reports/GOLD_REPLAY_STRATEGY_ANALYSIS.md
+  - configs/top_team_registry.yaml
+  fallback: Keep manual five-replay sample and only refresh after final leaderboard/medals appear.
+  priority: P1
+recommended_order:
+- profile_trace_logging
+- fix_observed_turns_confidence
+- opponent_family_benchmark_pool
+- recently_captured_recapture_logic
+- center_high_production_control
+- comet_spawn_preposition
+- four_player_threat_prioritization
+- anti_big_stack_reinforcement_source_counter
+- base_agent_scoring_injection
+- profile_specific_reserve_floor
+- weak_bot_starter_like_recognition
+- high_rank_replay_feature_extraction
