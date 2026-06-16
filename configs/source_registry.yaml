@@ -1,0 +1,38 @@
+sources:
+  - source_id: orbit_wars_lab
+    name: automatylicza/orbit-wars-lab
+    url: https://github.com/automatylicza/orbit-wars-lab
+    platform: github
+    evidence_level: B
+    type: local_tournament_and_agent_zoo
+    expected_value: high
+    next_action: clone_to_external_and_inspect_agents
+  - source_id: pilkwang_structured_baseline
+    name: pilkwang/orbit-wars-structured-baseline
+    platform: kaggle_code
+    evidence_level: B
+    type: structured_public_agent
+    expected_value: high
+    next_action: inspect_for_base_agent_selection
+  - source_id: tamrazov_star_wars
+    name: romantamrazov/orbit-star-wars-lb-max-1224
+    platform: kaggle_code
+    evidence_level: B
+    type: public_claimed_high_agent
+    expected_value: high
+    next_action: use_as_benchmark_opponent_after_local_harness
+  - source_id: ykhnkf_distance_prioritized
+    name: ykhnkf/distance-prioritized-agent-lb-max-score-1100
+    platform: kaggle_code
+    evidence_level: B
+    type: public_claimed_high_agent
+    expected_value: high
+    next_action: use_as_benchmark_opponent_after_local_harness
+  - source_id: sigmaborov_reinforce
+    name: sigmaborov/lb-958-1-orbit-wars-2026-reinforce
+    platform: kaggle_code
+    evidence_level: B
+    type: public_rl_or_search_agent
+    expected_value: medium
+    next_action: inspect_for_features_not_direct_submission
+
