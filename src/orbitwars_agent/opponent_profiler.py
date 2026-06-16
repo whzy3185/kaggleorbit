@@ -32,6 +32,54 @@ class OpponentProfile:
         turn_factor = min(1.0, self.observed_turns / 60.0)
         return clamp(0.75 * fleet_factor + 0.25 * turn_factor)
 
+    @property
+    def observed_new_fleets(self) -> int:
+        return self.new_fleets_count
+
+    @property
+    def estimated_overcommit_count(self) -> int:
+        return self.overcommit_count
+
+    @property
+    def reinforce_count(self) -> int:
+        return 0
+
+    @property
+    def neutral_rusher(self) -> float:
+        return self.scores.get("neutral_rusher", 0.0)
+
+    @property
+    def enemy_rusher(self) -> float:
+        return self.scores.get("enemy_rusher", 0.0)
+
+    @property
+    def turtle(self) -> float:
+        return self.scores.get("turtle", 0.0)
+
+    @property
+    def center_greedy(self) -> float:
+        return self.scores.get("center_greedy", 0.0)
+
+    @property
+    def production_greedy(self) -> float:
+        return self.scores.get("production_greedy", 0.0)
+
+    @property
+    def big_stack_attacker(self) -> float:
+        return self.scores.get("big_stack", 0.0)
+
+    @property
+    def comet_greedy(self) -> float:
+        return self.scores.get("comet_greedy", 0.0)
+
+    @property
+    def overcommitter(self) -> float:
+        return self.scores.get("overcommitter", 0.0)
+
+    @property
+    def weak_bot(self) -> float:
+        return self.scores.get("weak_bot", 0.0)
+
 
 class OpponentProfiler:
     def __init__(self) -> None:
@@ -57,6 +105,12 @@ class OpponentProfiler:
 
         self.previous_state = state
         return self.profiles
+
+    def get_profile(self, enemy_id: int) -> OpponentProfile:
+        return self._profile(enemy_id)
+
+    def get_all_profiles(self) -> Dict[int, OpponentProfile]:
+        return dict(self.profiles)
 
     def _profile(self, enemy_id: int) -> OpponentProfile:
         if enemy_id not in self.profiles:
@@ -133,4 +187,3 @@ class OpponentProfiler:
             "weak_bot": 0.0,
             "confidence": profile.confidence,
         }
-
