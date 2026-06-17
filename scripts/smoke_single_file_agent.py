@@ -21,6 +21,7 @@ def _load_agent(path: Path):
     if spec is None or spec.loader is None:
         raise ImportError(f"Cannot load Python module from {path}")
     module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
     spec.loader.exec_module(module)
     agent_fn = getattr(module, "agent", None)
     if agent_fn is None or not callable(agent_fn):
