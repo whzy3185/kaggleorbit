@@ -6,18 +6,25 @@ official_score_reference:
   agent: starter baseline
   public_score: 317.8
 selected_candidate:
-  id: base_safe_fallback
+  id: vkhydras_last_base_candidate
   agent_path: local/agents/base_agent_entry
   package_source: agents/base_agent_entry/main.py
-  base_agent: pilkwang_structured
+  base_agent: vkhydras_last_heuristic
   use_profiler: false
   use_counter_policy: false
   use_supplemental_moves: false
   reason: >
-    The full adaptive wrapper lost 97-3 to the selected base in a 50-seed
-    bidirectional local tournament. A defense-only smoke check also lost 0-2
-    to base, so the safest current candidate is the selected base fallback.
+    The full adaptive wrapper lost 97-3 to the previous Pilkwang base in a
+    50-seed bidirectional local tournament. A later base reselection showed
+    that Pilkwang itself is not the strongest available public foundation:
+    vkhydras_last_heuristic beat the P0 local public pool 16-0 and beat
+    vkhydras_peak_heuristic 15-5 in local bidirectional screens. The current
+    safest score-improvement candidate is therefore the stronger single-file
+    base, not the incomplete adaptive wrapper.
 rejected_candidates:
+  pilkwang_structured_base:
+    agent_path: local/agents/public/pilkwang_structured
+    reason: "Superseded by vkhydras_last_heuristic after local reselection; vkhydras_last beat Pilkwang 4-0 in the P0 screen and 2-0 in the seed-1 probe."
   adaptive_full:
     agent_path: local/agents/variants/adaptive_full
     reason: "Lost 3-97 versus base in local 50-seed bidirectional evaluation."
@@ -28,6 +35,6 @@ rejected_candidates:
     agent_path: local/agents/variants/adaptive_no_profiler
     reason: "Not selected because supplemental post-actions remain unproven and base fallback is stronger."
 blocked_until:
-  - "Implement budget-protected integration instead of unconstrained post-base supplemental moves."
-  - "Re-run base-vs-adaptive direct tournament and public-opponent screen."
-  - "Show no regression against base before packaging or submit confirmation."
+  - "Package and smoke-test the vkhydras_last single-file candidate."
+  - "Submit only after explicit user confirmation, then update SCORECARD."
+  - "If optimizing further, start by porting minimal proven logic from vkhydras_last instead of wrapping weak post-actions around Pilkwang."

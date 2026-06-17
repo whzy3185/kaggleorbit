@@ -2,6 +2,11 @@
 
 Date: 2026-06-16
 
+Superseded on 2026-06-17 by `reports/BASE_RESELECTION_REVIEW.md`.
+The current selected base candidate is `vkhydras_last_heuristic`, not
+`pilkwang_structured`. This report is kept as historical evidence for the
+earlier smoke-screen decision.
+
 Selected base agent: `pilkwang_structured`.
 
 This is based on a local smoke round-robin, not an official Kaggle score.

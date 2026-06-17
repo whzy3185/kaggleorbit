@@ -1,27 +1,39 @@
 base_agent:
-  source_id: pilkwang_structured
-  name: Pilkwang Structured Baseline v11
-  tracked_main: agents/public/pilkwang_structured/main.py
+  source_id: vkhydras_last_heuristic
+  name: Vkhydras Last Heuristic
+  tracked_main: agents/public/vkhydras_last_heuristic/main.py
   wrapper: agents/base_agent.py
-  sha256: 0F297612110D28A5A15F4564A1C36F87FDB5C895D557DE10876AF6F64D5E4B4C
-  license: Apache 2.0
-  author: Pilkwang Kim
-  kernel_slug: pilkwang/orbit-wars-structured-baseline
-  kernel_version: 45
-  selection_status: selected_after_smoke_round_robin
+  sha256: 5E35FE75AE5D32FDA08F839F5FC5BE245FDA0B26B050A0CB6CECD59CEF9938D8
+  license: unknown_no_license_file
+  author: vkhydras
+  source_repo: vkhydras/orbit-wars-heuristic-bots
+  source_path: external/orbit-wars-heuristic-bots/14_main_k_v2_lb1152_LAST_HEURISTIC.py
+  selection_status: selected_after_base_reselection_screen
   local_smoke_result:
-    wins: 8
+    wins: 16
     losses: 0
     draws: 0
     errors: 0
-    games: 8
+    games: 16
+    series: base_candidate_screen_vkh_last_p0_s1_2
+  local_four_player_smoke:
+    wins: 2
+    losses: 1
+    draws: 0
+    errors: 0
+    games: 3
+    avg_rank: 1.3333
+    series: vkh_last_4p_smoke_s1_3
   reasons:
-    - strongest local smoke result among tested P0/P1 candidates
-    - has world model and physics-aware strategy layers
-    - exposes build_world for later adapter integration
-    - easier to patch than larger or less documented variants
+    - beat pilkwang_structured ykhnkf_distance_prioritized tamrazov_starwars and sigmaborov_reinforce 16-0 in a local bidirectional P0 screen
+    - beat vkhydras_peak_heuristic 15-5 in a local 10-seed bidirectional mirror-family screen
+    - includes stronger built-in capture sufficiency snipe resistance target ranking defense reserve and 4-player filters than the old Pilkwang base
+    - single-file public source is easier to package than the unresolved multi-file adaptive tar.gz path
   risks:
-    - smoke tournament used only two seeds
-    - author notes weak 1v3 behavior
-    - local score is not official Kaggle score
-
+    - local tournament results are not official Kaggle scores
+    - no LICENSE file was found in the source repository; README says the files are shared as baselines
+    - current 4-player evidence is only a 3-seed smoke and position 0 only
+    - wrappers that need build_world still use Pilkwang's world builder because vkhydras_last exposes agent only
+  supersedes:
+    source_id: pilkwang_structured
+    reason: selected from an earlier 2-seed smoke before vkhydras_last and vkhydras_peak were evaluated

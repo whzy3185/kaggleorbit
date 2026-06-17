@@ -10,7 +10,7 @@ variants:
     use_profiler: false
     use_counter_policy: false
     use_supplemental_moves: false
-    description: Selected Pilkwang base through agents/base_agent.py wrapper.
+    description: Selected vkhydras_last_heuristic base through agents/base_agent.py wrapper.
   adaptive_agent:
     agent_path: local/agents/adaptive_agent
     use_profiler: true
