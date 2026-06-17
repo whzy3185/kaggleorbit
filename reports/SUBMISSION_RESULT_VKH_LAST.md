@@ -33,12 +33,24 @@ submit_command: kaggle competitions submit -c orbit-wars -f dist\main.py -m "vkh
 Latest checked CLI output:
 
 ```yaml
-status: SubmissionStatus.PENDING
-public_score: null
-private_score: null
+initial_submission:
+  submission_id: 53772197
+  status: SubmissionStatus.PENDING
+  public_score: null
+  private_score: null
+resubmission:
+  submission_id: 53772607
+  message: vkhydras_last_single_file_candidate_d7d937e_resubmit1
+  status: SubmissionStatus.PENDING
+  public_score: null
+  private_score: null
 ```
 
-Do not submit another copy while `53772197` remains pending.
+The user reported the pending state as problematic and requested a resubmit.
+Kaggle CLI help did not expose a cancel/stop/withdraw command for pending
+submissions. A single resubmission was uploaded with the same `dist/main.py`.
+
+Do not submit another copy while `53772197` or `53772607` remains pending.
 
 ## Current Completed Official Best
 
@@ -88,7 +100,7 @@ Poll:
 kaggle competitions submissions -c orbit-wars
 ```
 
-When `53772197` changes to `COMPLETE` or `ERROR`, update:
+When `53772197` and/or `53772607` changes to `COMPLETE` or `ERROR`, update:
 
 ```text
 reports/SCORECARD.md
