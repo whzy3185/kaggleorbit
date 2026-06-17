@@ -34,6 +34,11 @@ _SETTING_KEYS = {
     "use_counter_policy",
     "use_supplemental_moves",
     "enabled_policies",
+    "max_supplemental_ship_ratio",
+    "max_supplemental_actions",
+    "protect_threatened_sources",
+    "supplemental_requires_threat",
+    "allow_positive_commit_delta",
 }
 
 
@@ -71,6 +76,11 @@ def _resolve_settings(config: Any) -> tuple[dict[str, Any], Any]:
         "use_counter_policy": True,
         "use_supplemental_moves": True,
         "enabled_policies": _DEFAULT_ENABLED_POLICIES,
+        "max_supplemental_ship_ratio": 0.12,
+        "max_supplemental_actions": 4,
+        "protect_threatened_sources": True,
+        "supplemental_requires_threat": False,
+        "allow_positive_commit_delta": False,
     }
     if isinstance(config, dict) and _SETTING_KEYS.intersection(config):
         settings.update({key: config[key] for key in _SETTING_KEYS if key in config})
@@ -88,22 +98,37 @@ def agent(obs, config=None):
         state = build_game_state(obs, inferred_step=_STEP)
         _STEP = state.step + 1
         base_actions = _validate_actions(state, _call_base_agent(obs, config=base_config))
+        if settings["protect_threatened_sources"]:
+            base_actions = _protect_threatened_source_actions(state, base_actions)
         profiles = _PROFILER.update(state) if settings["use_profiler"] else {}
         if settings["use_counter_policy"]:
             modifiers = build_strategy_modifiers(
                 profiles,
                 enabled_policies=settings["enabled_policies"],
             )
+            if not settings["allow_positive_commit_delta"]:
+                modifiers.max_commit_ratio_delta = min(0.0, modifiers.max_commit_ratio_delta)
         else:
             modifiers = StrategyModifiers()
         if time.perf_counter() - start > 0.75:
             return base_actions
         if not settings["use_supplemental_moves"]:
             return base_actions
-        if not _should_add_supplement(state, profiles, settings["enabled_policies"]):
+        if not _should_add_supplement(
+            state,
+            profiles,
+            settings["enabled_policies"],
+            supplemental_requires_threat=bool(settings["supplemental_requires_threat"]),
+        ):
             return base_actions
         supplemental = choose_actions(state, modifiers)
-        return _merge_actions(state, base_actions, supplemental)
+        return _merge_actions(
+            state,
+            base_actions,
+            supplemental,
+            max_supplemental_ship_ratio=float(settings["max_supplemental_ship_ratio"]),
+            max_supplemental_actions=int(settings["max_supplemental_actions"]),
+        )
     except Exception:
         try:
             return _call_base_agent(obs, config=config)
@@ -180,11 +205,18 @@ def _validate_actions(state: GameState, actions: list) -> list[list[float]]:
     return valid
 
 
-def _merge_actions(state: GameState, base_actions: list, supplemental: list) -> list[list[float]]:
+def _merge_actions(
+    state: GameState,
+    base_actions: list,
+    supplemental: list,
+    *,
+    max_supplemental_ship_ratio: float = 1.0,
+    max_supplemental_actions: int = 12,
+) -> list[list[float]]:
     own = {planet.id: planet for planet in state.my_planets}
     merged: list[list[float]] = []
     committed: dict[int, int] = {}
-    for action in base_actions + supplemental:
+    for action in base_actions:
         if not isinstance(action, (list, tuple)) or len(action) != 3:
             continue
         from_id, angle, ships = int(action[0]), float(action[1]), int(action[2])
@@ -198,6 +230,29 @@ def _merge_actions(state: GameState, base_actions: list, supplemental: list) -> 
         send = min(ships, remaining)
         merged.append([from_id, angle, send])
         committed[from_id] = already + send
+    total_ships = sum(max(0, planet.ships) for planet in state.my_planets)
+    supplemental_budget = max(0, int(total_ships * max(0.0, max_supplemental_ship_ratio)))
+    supplemental_sent = 0
+    supplemental_count = 0
+    for action in supplemental:
+        if supplemental_count >= max_supplemental_actions or supplemental_sent >= supplemental_budget:
+            break
+        if not isinstance(action, (list, tuple)) or len(action) != 3:
+            continue
+        from_id, angle, ships = int(action[0]), float(action[1]), int(action[2])
+        source = own.get(from_id)
+        if source is None or ships <= 0 or not math.isfinite(angle):
+            continue
+        already = committed.get(from_id, 0)
+        remaining = max(0, source.ships - already)
+        budget_left = supplemental_budget - supplemental_sent
+        send = min(ships, remaining, budget_left)
+        if send <= 0:
+            continue
+        merged.append([from_id, angle, send])
+        committed[from_id] = already + send
+        supplemental_sent += send
+        supplemental_count += 1
     return merged[:16]
 
 
@@ -205,9 +260,13 @@ def _should_add_supplement(
     state: GameState,
     profiles: dict[int, OpponentProfile],
     enabled_policies: tuple[str, ...] | None = _DEFAULT_ENABLED_POLICIES,
+    *,
+    supplemental_requires_threat: bool = False,
 ) -> bool:
     if detect_threatened_own_planets(state, horizon_turns=45):
         return True
+    if supplemental_requires_threat:
+        return False
     for profile in profiles.values():
         if profile.confidence < 0.55:
             continue
@@ -215,6 +274,38 @@ def _should_add_supplement(
             if effective(profile, key) >= 0.55:
                 return True
     return False
+
+
+def _protect_threatened_source_actions(state: GameState, actions: list[list[float]]) -> list[list[float]]:
+    incoming = incoming_fleets_by_planet(state)
+    own = {planet.id: planet for planet in state.my_planets}
+    reserve_by_planet: dict[int, int] = {}
+    for planet_id, fleets in incoming.items():
+        planet = own.get(planet_id)
+        if planet is None:
+            continue
+        enemy_ships = sum(fleet.ships for fleet in fleets if fleet.owner != state.player)
+        if enemy_ships > planet.ships + 2:
+            reserve_by_planet[planet_id] = int(enemy_ships + 3)
+    if not reserve_by_planet:
+        return actions
+
+    protected: list[list[float]] = []
+    committed: dict[int, int] = {}
+    for action in actions:
+        from_id, angle, ships = int(action[0]), float(action[1]), int(action[2])
+        source = own.get(from_id)
+        if source is None:
+            continue
+        already = committed.get(from_id, 0)
+        reserve = reserve_by_planet.get(from_id, 0)
+        if reserve:
+            ships = min(ships, max(0, source.ships - already - reserve))
+        if ships <= 0:
+            continue
+        protected.append([from_id, angle, int(ships)])
+        committed[from_id] = already + int(ships)
+    return protected
 
 
 def _reinforce_threatened_planets(

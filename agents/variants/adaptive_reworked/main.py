@@ -3,7 +3,7 @@ import sys
 
 ROOT = None
 if "__file__" in globals():
-    ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 else:
     cwd = os.getcwd()
     candidates = [
@@ -16,10 +16,11 @@ else:
             ROOT = candidate
             break
 
-if ROOT is not None:
-    SRC = os.path.join(ROOT, "src")
-    if SRC not in sys.path:
-        sys.path.insert(0, SRC)
+if ROOT is None:
+    ROOT = os.getcwd()
+SRC = os.path.join(ROOT, "src")
+if SRC not in sys.path:
+    sys.path.insert(0, SRC)
 
 from orbitwars_agent.adaptive_agent import agent as _adaptive_agent
 
@@ -41,4 +42,4 @@ CONFIG = {
 
 
 def agent(obs, config=None):
-    return _adaptive_agent(obs, CONFIG)
+    return _adaptive_agent(obs, config=CONFIG)

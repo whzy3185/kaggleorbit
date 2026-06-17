@@ -44,6 +44,21 @@ variants:
       - big_stack
       - weakest_targeter
     description: Conservative profiler-driven defensive counters only.
+  adaptive_reworked:
+    agent_path: local/agents/variants/adaptive_reworked
+    use_profiler: true
+    use_counter_policy: true
+    use_supplemental_moves: true
+    enabled_policies:
+      - enemy_rusher
+      - big_stack
+      - weakest_targeter
+    max_supplemental_ship_ratio: 0.08
+    max_supplemental_actions: 3
+    protect_threatened_sources: true
+    supplemental_requires_threat: true
+    allow_positive_commit_delta: false
+    description: Budget-capped safety-filtered adaptive candidate for Stage 7 validation.
   adaptive_full:
     agent_path: local/agents/variants/adaptive_full
     use_profiler: true
