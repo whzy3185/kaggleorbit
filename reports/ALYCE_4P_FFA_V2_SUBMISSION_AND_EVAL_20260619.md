@@ -5,8 +5,8 @@ Date: 2026-06-19
 ## Summary
 
 User explicitly requested a Kaggle submission of the V2 variant while local
-optimization continues. One V2 package was submitted. The submission is pending
-at the time this report was written.
+optimization continues. One V2 package was submitted. Kaggle completed the run
+with public score 600.0.
 
 V2 is a research variant, not a proven final candidate. Local short eval shows
 it is not stronger than the full Alyce Intervention public output. The next
@@ -70,14 +70,14 @@ Command executed after explicit user instruction:
 kaggle competitions submit -c orbit-wars -f dist/alyce_4p_ffa_v2_20260619.tar.gz -m "alyce_4p_ffa_v2_soft_contested_filter_20260619"
 ```
 
-Submission list immediately after upload:
+Submission result:
 
 ```text
 ref: 53827977
 fileName: alyce_4p_ffa_v2_20260619.tar.gz
 description: alyce_4p_ffa_v2_soft_contested_filter_20260619
-status: SubmissionStatus.PENDING
-publicScore: blank
+status: SubmissionStatus.COMPLETE
+publicScore: 600.0
 ```
 
 Current official best visible in the same submission list:
@@ -88,7 +88,13 @@ status: COMPLETE
 publicScore: 1062.9
 ```
 
-No official V2 score is available yet.
+Official decision:
+
+```text
+V2 does not beat 1062.9.
+Do not promote V2.
+Do not resubmit this line without a package/runtime or strategy change.
+```
 
 ## V2 Change Rationale
 
@@ -176,8 +182,10 @@ Submit status:
 
 ```text
 submitted: true
-status: pending
-do_not_resubmit_until_result: true
+status: complete
+public_score: 600.0
+beats_current_best_1062_9: false
+do_not_resubmit_same_package: true
 ```
 
 Next action:
@@ -189,4 +197,3 @@ Next action:
 4. Start next local optimization from Alyce Intervention/ProducerLite v15, not
    from the Light-derived V2 branch.
 ```
-
