@@ -9,8 +9,8 @@ competition: orbit-wars
 submission_id: 53852919
 message: alyce_v6_prod_gap_mode_1db7614
 file: alyce_v6_prod_gap_mode_20260619.tar.gz
-status_latest_cli: SubmissionStatus.PENDING
-public_score_latest_cli: n/a
+status_latest_cli: SubmissionStatus.COMPLETE
+public_score_latest_cli: 1177.8
 private_score_latest_cli: n/a
 ```
 
@@ -76,7 +76,7 @@ CLI query immediately after submission:
 
 ## Interpretation
 
-V6 is now in the official queue. No official score exists yet.
+V6 completed and is the current official best observed in this repository.
 
 Local evidence before submission:
 
@@ -98,24 +98,27 @@ because local 4P gates justified promotion.
 At this snapshot:
 
 ```text
-current best remains V2 submission 53827977 at 1073.1
+current best is V6 submission 53852919 at 1177.8
+previous best was V2 submission 53827977 at 1073.1
 Alyce repro 53793561 remains close at 1069.1
 V3 remains below both at 1021.7
-V5 is rejected at 756.7
-V6 is pending
+V5 is below V6 at 1100.1 in the latest CLI snapshot
 ```
 
-## Next Check
+## Replay Review
 
-Poll status without resubmitting:
-
-```bash
-kaggle competitions submissions -c orbit-wars
-```
-
-If `53852919` completes, update:
+The official replay review is recorded in:
 
 ```text
-reports/SCORECARD.md
-reports/ALYCE_V6_SUBMISSION_RESULT_20260619.md
+reports/ALYCE_V6_OFFICIAL_REPLAY_REVIEW_20260620.md
+```
+
+Key result:
+
+```text
+public replay files downloaded: 73
+public episodes analyzed: 72
+2P first-place rate: 21/38
+4P first-place rate: 11/34
+main remaining gap: 4P non-first games still fall behind by step 50-100
 ```

@@ -1,10 +1,10 @@
 # Scorecard
 
-Last updated: 2026-06-19
+Last updated: 2026-06-20
 
 | Time | Submission ID | Message | Source | Public score | Status | Notes |
 |---|---:|---|---|---:|---|---|
-| 2026-06-19 15:04:36 UTC | 53852919 | `alyce_v6_prod_gap_mode_1db7614` | Multi-file V6 package `dist/alyce_v6_prod_gap_mode_20260619.tar.gz`; sha256 `8F64DE7C6FA6817C568F70547DCEB5FAF6A2933AD56D1CC54B9372AB333B126F` | n/a | `SubmissionStatus.PENDING` | User-requested V6 upload. Package smoke passed; local rotated 4P screen was unstable and did not justify promotion. |
+| 2026-06-19 15:04:36 UTC | 53852919 | `alyce_v6_prod_gap_mode_1db7614` | Multi-file V6 package `dist/alyce_v6_prod_gap_mode_20260619.tar.gz`; sha256 `8F64DE7C6FA6817C568F70547DCEB5FAF6A2933AD56D1CC54B9372AB333B126F` | 1177.8 | `SubmissionStatus.COMPLETE` | Current official best in latest CLI query on 2026-06-20. Local rotated 4P screen was pessimistic; official replay review shows V6 improves enough cases while 4P non-first games still collapse by step 50-100. |
 | 2026-06-19 14:30:43 UTC | 53851968 | `alyce_v5_v2_trace_filter_fd3c2b7` | Multi-file V5 package `dist/alyce_v5_v2_trace_filter_20260619.tar.gz`; sha256 `2C8553B6E537DF5D24628EC8FABD5B8F730253EDE65077FE6451E97F7E785E94` | 756.7 | `SubmissionStatus.COMPLETE` | Official result confirms V5 should be rejected; it is far below V2 and Alyce repro. |
 | 2026-06-19 08:49:46 UTC | 53842450 | `alyce_intervention_v3_soft_far_low_penalty_b1542f4` | Multi-file V3 package `dist/alyce_intervention_v3_20260619.tar.gz`; sha256 `166D8C827A2F91FA28DF943F7611A145082538747293D7DACBFC3B0C9E026B90` | 1021.7 | `SubmissionStatus.COMPLETE` | Latest CLI query at V6 submission time. Playable but below V2 and Alyce repro; see `V3_OFFICIAL_REPLAY_EFFECTIVENESS_REVIEW_20260619.md`. |
 | 2026-06-19 03:21:33 UTC | 53827977 | `alyce_4p_ffa_v2_soft_contested_filter_20260619` | Multi-file V2 package `dist/alyce_4p_ffa_v2_20260619.tar.gz`; sha256 `44805225F46B24B582BCB71042726050F23F5C6AEBF3F4BECCB0CCC024F5AF4C` | 1073.1 | `SubmissionStatus.COMPLETE` | Current official best in latest CLI query at V5 submission time. Score drifted from prior 1101.6/1087.7 snapshots but remains above Alyce repro and V3. |
